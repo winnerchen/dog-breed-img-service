@@ -26,7 +26,7 @@ public class ApiController {
     public DogBreedResponseDto generateDogBreed() throws CustomException {
         DogBreedResponseDto responseDto = dogBreedService.generateDogBreedImg();
 
-        return null;
+        return responseDto;
     }
 
 }

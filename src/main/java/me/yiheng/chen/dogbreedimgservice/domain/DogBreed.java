@@ -9,7 +9,6 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
-import java.util.Date;
 
 /**
  * @author Yiheng Chen
@@ -23,8 +22,7 @@ import java.util.Date;
 public class DogBreed {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    @Column
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(name = "name")
@@ -32,7 +30,7 @@ public class DogBreed {
 
     @CreationTimestamp
     @Column(name = "created_on")
-    private Date createdOn;
+    private Timestamp createdOn;
 
     @Column(name = "updated_on")
     @UpdateTimestamp

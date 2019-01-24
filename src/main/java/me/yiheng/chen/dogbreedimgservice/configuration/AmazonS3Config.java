@@ -15,10 +15,10 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 public class AmazonS3Config {
-    @Value("${aws.access.key.id}")
+    @Value("${aws.access.key}")
     private String awsKeyId;
 
-    @Value("${aws.access.key.secret}")
+    @Value("${aws.access.secret}")
     private String awsKeySecret;
 
     @Value("${aws.region}")

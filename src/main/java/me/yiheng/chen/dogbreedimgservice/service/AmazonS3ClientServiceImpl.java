@@ -48,9 +48,9 @@ public class AmazonS3ClientServiceImpl implements AmazonS3ClientService {
             if (enablePublicReadAccess) {
                 putObjectRequest.withCannedAcl(CannedAccessControlList.PublicRead);
             }
-            PutObjectResult result = amazonS3.putObject(putObjectRequest);
+            amazonS3.putObject(putObjectRequest);
 
-            resourceUrl = Optional.ofNullable(amazonS3.getUrl(awsS3Bucket, fileName).getPath()).orElseThrow(() -> new CustomException("resource url cannot be null"));
+            resourceUrl = Optional.ofNullable(String.valueOf(amazonS3.getUrl(awsS3Bucket, fileName))).orElseThrow(() -> new CustomException("resource url cannot be null"));
 
             //removing the file created in the server
             if (file.delete()) {
