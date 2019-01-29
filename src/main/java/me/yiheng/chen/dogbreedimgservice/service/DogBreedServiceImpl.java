@@ -1,5 +1,7 @@
 package me.yiheng.chen.dogbreedimgservice.service;
 
+import lombok.Data;
+import lombok.NonNull;
 import me.yiheng.chen.dogbreedimgservice.dao.DogBreedRepo;
 import me.yiheng.chen.dogbreedimgservice.domain.DogBreed;
 import me.yiheng.chen.dogbreedimgservice.dto.DogBreedResponseDto;
@@ -14,6 +16,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static java.lang.String.format;
 
@@ -22,6 +25,7 @@ import static java.lang.String.format;
  * @date 20/1/19 1:29 PM
  */
 @Service
+@Data
 public class DogBreedServiceImpl implements DogBreedService {
 
     @Value("${dogbreed.api.url}")
@@ -50,7 +54,7 @@ public class DogBreedServiceImpl implements DogBreedService {
         try {
             responseDto = restTemplate.getForObject(dogBreedApiUrl, ExternalDogBreedResponseDto.class);
         } catch (Exception e) {
-            throw new CustomException("Exception accessing external dog breed api");
+            throw new CustomException(format("Exception accessing external dog breed api, message: {%s}, cause: {%s}", e.getMessage(), e.getCause()));
         }
 
         Optional.ofNullable(responseDto).orElseThrow(() -> new CustomException("response from external dog breed api is null"));
@@ -75,13 +79,13 @@ public class DogBreedServiceImpl implements DogBreedService {
 
         return DogBreedResponseDto.builder()
                 .resourceUrl(resourceUrl)
-                .status("success")
+                .status(STATUS_SUCCESS)
                 .build();
     }
 
     @Override
-    public DogBreedResponseDto retrieveById(Long id) {
-        Optional<DogBreed> optionalDogBreed = dogBreedRepo.findById(Long.valueOf(id));
+    public DogBreedResponseDto retrieveById(@NonNull Long id) {
+        Optional<DogBreed> optionalDogBreed = dogBreedRepo.findById(id);
 
         if (!optionalDogBreed.isPresent()){
             return DogBreedResponseDto.builder().message(format("resource with the request id {%s} does not exist", id)).build();
@@ -91,6 +95,7 @@ public class DogBreedServiceImpl implements DogBreedService {
         return DogBreedResponseDto.builder()
                 .id(dogBreed.getId())
                 .name(dogBreed.getName())
+                .status(STATUS_SUCCESS)
                 .resourceUrl(dogBreed.getS3lImageUrl())
                 .createdOn(dogBreed.getCreatedOn())
                 .build();
@@ -98,7 +103,7 @@ public class DogBreedServiceImpl implements DogBreedService {
 
     @Override
     public DogBreedResponseDto removeById(Long id) throws CustomException {
-        Optional<DogBreed> optionalDogBreed = dogBreedRepo.findById(Long.valueOf(id));
+        Optional<DogBreed> optionalDogBreed = dogBreedRepo.findById(id);
         if (!optionalDogBreed.isPresent()){
             return DogBreedResponseDto.builder().message(format("the resource you try to remove with id {%s} does not exist", id)).build();
         }
@@ -111,7 +116,7 @@ public class DogBreedServiceImpl implements DogBreedService {
             throw new CustomException(format("Exception remove resource with id: {%s}", id));
         }
         //remove image from s3
-        if (!amazonS3ClientService.deleteFileFromS3Bucket(awsS3Bucket, optionalDogBreed.get().getName())){
+        if (!amazonS3ClientService.deleteFileFromS3Bucket(awsS3Bucket, optionalDogBreed.get().getName() + IMAGE_FORMAT_SUFFIX)) {
             throw new CustomException("Exception removing file from s3 bucket");
         }
 
@@ -142,11 +147,20 @@ public class DogBreedServiceImpl implements DogBreedService {
 
     @Override
     public List<String> findBreedNames() {
-        return null;
+        List<DogBreed> dogBreeds = dogBreedRepo.findAll();
+
+        return dogBreeds.stream().map(DogBreed::getName).collect(Collectors.toList());
     }
 
-    private String getDogNameFromUrl(String url) {
-        return url.split("/")[4];
+    private String getDogNameFromUrl(@NonNull String url) throws CustomException {
+        String name;
+        try {
+            name = url.split("/")[4];
+        }catch (Exception e){
+            throw new CustomException(format("Response image url from external endpoint {%s} is not valid", url));
+        }
+
+        return name;
     }
 
 

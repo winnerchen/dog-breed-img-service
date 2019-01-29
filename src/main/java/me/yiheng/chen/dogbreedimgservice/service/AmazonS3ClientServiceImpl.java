@@ -6,7 +6,9 @@ import com.amazonaws.regions.Region;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.CannedAccessControlList;
+import com.amazonaws.services.s3.model.DeleteObjectRequest;
 import com.amazonaws.services.s3.model.PutObjectRequest;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import me.yiheng.chen.dogbreedimgservice.exception.CustomException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,7 +35,7 @@ public class AmazonS3ClientServiceImpl implements AmazonS3ClientService {
         this.awsS3Bucket = awsS3Bucket;
     }
 
-    public String uploadFileToS3Bucket(File file, boolean enablePublicReadAccess) throws CustomException {
+    public String uploadFileToS3Bucket(@NonNull File file, boolean enablePublicReadAccess) throws CustomException {
         String fileName = file.getName();
         String resourceUrl = null;
 
@@ -45,7 +47,7 @@ public class AmazonS3ClientServiceImpl implements AmazonS3ClientService {
             }
             amazonS3.putObject(putObjectRequest);
 
-            if(!file.delete()){
+            if (!file.delete()) {
                 log.error("failed to delete file: {}", file.getName());
             }
 
@@ -62,9 +64,9 @@ public class AmazonS3ClientServiceImpl implements AmazonS3ClientService {
     @Override
     public Boolean deleteFileFromS3Bucket(String bucketName, String keyName) {
         try {
-            amazonS3.deleteObject(bucketName, keyName);
-        } catch (AmazonServiceException e) {
-            log.error(e.getErrorCode(), e.getErrorMessage());
+            amazonS3.deleteObject(new DeleteObjectRequest(bucketName, keyName));
+        } catch (AmazonServiceException ex) {
+            log.error("error [" + ex.getMessage() + "] occurred while removing [" + keyName + "] ");
             return false;
         }
         return true;

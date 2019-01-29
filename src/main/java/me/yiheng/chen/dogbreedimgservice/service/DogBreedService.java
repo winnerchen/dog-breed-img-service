@@ -11,6 +11,10 @@ import java.util.List;
  */
 public interface DogBreedService {
 
+    String STATUS_SUCCESS = "SUCCESS";
+
+    String IMAGE_FORMAT_SUFFIX = ".jpg";
+
     /**
      * generate a new dog breed record
      */

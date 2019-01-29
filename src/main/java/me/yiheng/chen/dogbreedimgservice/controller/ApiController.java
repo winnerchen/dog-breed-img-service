@@ -4,7 +4,6 @@ import me.yiheng.chen.dogbreedimgservice.dto.DogBreedResponseDto;
 import me.yiheng.chen.dogbreedimgservice.exception.CustomException;
 import me.yiheng.chen.dogbreedimgservice.service.DogBreedService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -13,7 +12,9 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import static java.lang.String.format;
 
@@ -50,7 +51,7 @@ public class ApiController {
         return responseDto.getId() != null ? new ResponseEntity<>(responseDto, HttpStatus.OK) : new ResponseEntity<>(responseDto, HttpStatus.BAD_REQUEST);
     }
 
-    @RequestMapping(value = "/name/{name}",method = RequestMethod.GET)
+    @RequestMapping(value = "/name/{name}", method = RequestMethod.GET)
     public ResponseEntity<List<DogBreedResponseDto>> retrieveDogBreedByName(@PathVariable String name) throws CustomException {
         List<DogBreedResponseDto> dogBreedResponseDtos = dogBreedService.searchByName(name);
 
@@ -64,8 +65,15 @@ public class ApiController {
     }
 
 
+    @RequestMapping(value = "/name/list", method = RequestMethod.GET)
+    public ResponseEntity<Map<String, String[]>> retrieveDogNames() throws CustomException {
+        List<String> dogNames = dogBreedService.findBreedNames();
 
+        String[] nameArr = dogNames.stream().toArray(String[]::new);
 
+        Map<String, String[]> response = Collections.singletonMap("names", nameArr);
 
+        return new ResponseEntity<>(response, HttpStatus.OK);
 
+    }
 }
