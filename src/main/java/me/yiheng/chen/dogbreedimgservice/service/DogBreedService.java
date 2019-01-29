@@ -21,14 +21,14 @@ public interface DogBreedService {
      * @param id
      * @return DogBreedResponseDto
      */
-    DogBreedResponseDto retrieveById(String id);
+    DogBreedResponseDto retrieveById(Long id);
 
     /**
      * remove the record from the database with the given id.
      * @param id
      * @return String successful/fail
      */
-    String removeById(String id);
+    DogBreedResponseDto removeById(Long id) throws CustomException;
 
     /**
      * retrieve any records from the database with the given dog breed name

@@ -11,4 +11,6 @@ import java.io.File;
 public interface AmazonS3ClientService {
     String uploadFileToS3Bucket(File file, boolean enablePublicReadAccess) throws CustomException;
 
+    Boolean deleteFileFromS3Bucket(String bucketName, String fileName);
+
 }

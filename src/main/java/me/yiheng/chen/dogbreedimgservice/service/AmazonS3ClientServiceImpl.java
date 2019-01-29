@@ -5,18 +5,15 @@ import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.regions.Region;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
-import com.amazonaws.services.s3.model.*;
+import com.amazonaws.services.s3.model.CannedAccessControlList;
+import com.amazonaws.services.s3.model.PutObjectRequest;
 import lombok.extern.slf4j.Slf4j;
 import me.yiheng.chen.dogbreedimgservice.exception.CustomException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
-import java.net.URL;
 import java.util.Optional;
-
-import static java.lang.String.format;
 
 /**
  * @author Yiheng Chen
@@ -29,20 +26,18 @@ public class AmazonS3ClientServiceImpl implements AmazonS3ClientService {
     private AmazonS3 amazonS3;
 
     @Autowired
-    public AmazonS3ClientServiceImpl(Region awsRegion, AWSCredentialsProvider awsCredentialsProvider,String awsS3Bucket) {
+    public AmazonS3ClientServiceImpl(Region awsRegion, AWSCredentialsProvider awsCredentialsProvider, String awsS3Bucket) {
         this.amazonS3 = AmazonS3ClientBuilder.standard()
                 .withCredentials(awsCredentialsProvider)
                 .withRegion(awsRegion.getName()).build();
         this.awsS3Bucket = awsS3Bucket;
     }
 
-    @Async
     public String uploadFileToS3Bucket(File file, boolean enablePublicReadAccess) throws CustomException {
         String fileName = file.getName();
         String resourceUrl = null;
 
         try {
-
             PutObjectRequest putObjectRequest = new PutObjectRequest(this.awsS3Bucket, fileName, file);
 
             if (enablePublicReadAccess) {
@@ -50,17 +45,28 @@ public class AmazonS3ClientServiceImpl implements AmazonS3ClientService {
             }
             amazonS3.putObject(putObjectRequest);
 
+            if(!file.delete()){
+                log.error("failed to delete file: {}", file.getName());
+            }
+
             resourceUrl = Optional.ofNullable(String.valueOf(amazonS3.getUrl(awsS3Bucket, fileName))).orElseThrow(() -> new CustomException("resource url cannot be null"));
 
-            //removing the file created in the server
-            if (file.delete()) {
-                log.error(format("failed to delete file: {%s}", fileName));
-            }
         } catch (AmazonServiceException ex) {
             log.error("error [" + ex.getMessage() + "] occurred while uploading [" + fileName + "] ");
         }
 
         return resourceUrl;
 
+    }
+
+    @Override
+    public Boolean deleteFileFromS3Bucket(String bucketName, String keyName) {
+        try {
+            amazonS3.deleteObject(bucketName, keyName);
+        } catch (AmazonServiceException e) {
+            log.error(e.getErrorCode(), e.getErrorMessage());
+            return false;
+        }
+        return true;
     }
 }

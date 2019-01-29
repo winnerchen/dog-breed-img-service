@@ -11,8 +11,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+
+import static java.lang.String.format;
 
 /**
  * @author Yiheng Chen
@@ -35,6 +38,9 @@ public class DogBreedServiceImpl implements DogBreedService {
 
     @Autowired
     private AmazonS3ClientService amazonS3ClientService;
+
+    @Autowired
+    private String awsS3Bucket;
 
     @Override
     public DogBreedResponseDto generateDogBreedImg() throws CustomException {
@@ -74,18 +80,64 @@ public class DogBreedServiceImpl implements DogBreedService {
     }
 
     @Override
-    public DogBreedResponseDto retrieveById(String id) {
-        return null;
+    public DogBreedResponseDto retrieveById(Long id) {
+        Optional<DogBreed> optionalDogBreed = dogBreedRepo.findById(Long.valueOf(id));
+
+        if (!optionalDogBreed.isPresent()){
+            return DogBreedResponseDto.builder().message(format("resource with the request id {%s} does not exist", id)).build();
+        }
+
+        DogBreed dogBreed = optionalDogBreed.get();
+        return DogBreedResponseDto.builder()
+                .id(dogBreed.getId())
+                .name(dogBreed.getName())
+                .resourceUrl(dogBreed.getS3lImageUrl())
+                .createdOn(dogBreed.getCreatedOn())
+                .build();
     }
 
     @Override
-    public String removeById(String id) {
-        return null;
+    public DogBreedResponseDto removeById(Long id) throws CustomException {
+        Optional<DogBreed> optionalDogBreed = dogBreedRepo.findById(Long.valueOf(id));
+        if (!optionalDogBreed.isPresent()){
+            return DogBreedResponseDto.builder().message(format("the resource you try to remove with id {%s} does not exist", id)).build();
+        }
+
+
+        //remove record from database
+        try{
+            dogBreedRepo.deleteById(id);
+        }catch (Exception e){
+            throw new CustomException(format("Exception remove resource with id: {%s}", id));
+        }
+        //remove image from s3
+        if (!amazonS3ClientService.deleteFileFromS3Bucket(awsS3Bucket, optionalDogBreed.get().getName())){
+            throw new CustomException("Exception removing file from s3 bucket");
+        }
+
+        return DogBreedResponseDto.builder()
+                .id(optionalDogBreed.get().getId())
+                .message("Resource successfully removed")
+                .build();
     }
 
     @Override
     public List<DogBreedResponseDto> searchByName(String name) {
-        return null;
+        List<DogBreed> dogBreeds = dogBreedRepo.findByName(name);
+        if (dogBreeds == null || dogBreeds.size() == 0) {
+            return null;
+        }
+
+        List<DogBreedResponseDto> dtoList = new ArrayList<>();
+
+        for (DogBreed dogBreed : dogBreeds) {
+            dtoList.add(DogBreedResponseDto.builder().id(dogBreed.getId())
+                    .name(dogBreed.getName())
+                    .createdOn(dogBreed.getCreatedOn())
+                    .resourceUrl(dogBreed.getS3lImageUrl()).build());
+        }
+
+        return dtoList;
     }
 
     @Override
