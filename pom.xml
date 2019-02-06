@@ -11,7 +11,7 @@
     </parent>
     <groupId>me.yiheng.chen</groupId>
     <artifactId>dog-breed-img-service</artifactId>
-    <version>1.0.3</version>
+    <version>1.0.4</version>
     <name>dog-breed-img-service</name>
     <description>dog-breed-img-service</description>
 

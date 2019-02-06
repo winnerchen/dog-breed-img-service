@@ -15,19 +15,17 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.File;
-import java.sql.Time;
 import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Optional;
 
-import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -123,7 +121,7 @@ public class DogBreedServiceImplTest {
         when(utilService.generateFileFromUrl(anyString(), anyString())).thenReturn(null);
 
         // then
-        exception.expect(NullPointerException.class);
+        //exception.expect(NullPointerException.class);
 
         //when
         subject.generateDogBreedImg();
@@ -153,7 +151,7 @@ public class DogBreedServiceImplTest {
 
         // then
         assertEquals("my_resource_url", responseDto.getResourceUrl());
-        assertEquals("success", responseDto.getStatus());
+        assertEquals("SUCCESS", responseDto.getStatus());
 
     }
 
@@ -183,7 +181,7 @@ public class DogBreedServiceImplTest {
         when(mockDogBreed.getName()).thenReturn("dog_name");
         when(mockDogBreed.getId()).thenReturn(1L);
         when(mockDogBreed.getS3lImageUrl()).thenReturn("s3_image_url");
-        when(mockDogBreed.getExternalImageUrl()).thenReturn("external_image_url");
+        //when(mockDogBreed.getExternalImageUrl()).thenReturn("external_image_url");
         when(mockDogBreed.getCreatedOn()).thenReturn(new Timestamp(date.getTime()));
 
 
